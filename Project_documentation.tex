@@ -1,0 +1,34 @@
+\documentclass[11pt]{article}
+\begin{document}
+
+\title{Merck medical papers challenge project documentation}
+\author{Maximilian Balthasar Mansky, Richard Schulz}
+\date{\today}
+\maketitle
+
+\section{Introduction}
+
+The Merck Medical Papers challenge is a public request to develop an algorithm to best predict future citations from a given article. Dataset for this challenge is the open access PubMed bulk package, around 30 GB of medical papers in XML format.
+
+\subsection{Data format}
+
+In the XML format, the data is organised in a tree structure, with meta data and abstract located under \texttt{article/front} and the main text under \texttt{article/body}. The \texttt{article/back} section contains information regarding funding and citations for the body.
+
+Each article file is named with its PMC ID, a unique 7 digit number prefixed by 'PMC', file ending \texttt{.nxml}.
+
+\section{First Steps}
+
+Before delving into the depths of NLP, we first check whether auxiliary information can already predict citations to any accuracy. For this, prepare a table from the downloaded files, including the following headers:
+
+\begin{table}[h!]
+\begin{tabular}{c c c c}
+PMC ID & Journal name & Publication date & Number of citations \\\hline
+\texttt{numerical id} & \texttt{string} & \texttt{date} & \texttt{integer}
+\end{tabular}
+\end{table}
+
+The first three can be extracted from the files, the last one needs to captured from the website. This table will also serve as a master table for connecting citations to PMC ID.
+
+
+
+\end{document}
