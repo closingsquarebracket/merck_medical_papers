@@ -1,4 +1,5 @@
 \documentclass[11pt]{article}
+\usepackage{hyperref}
 \begin{document}
 
 \title{Merck medical papers challenge project documentation}
@@ -18,7 +19,7 @@ Each article file is named with its PMC ID, a unique 7 digit number prefixed by 
 
 \section{First Steps}
 
-Before delving into the depths of NLP, we first check whether auxiliary information can already predict citations to any accuracy. For this, prepare a table from the downloaded files, including the following headers:
+Before delving into the depths of NLP, we first check whether auxiliary information can already predict citations to any accuracy. For this, prepare a table from the files, including the following headers:
 
 \begin{table}[h!]
 \begin{tabular}{c c c c}
@@ -27,7 +28,25 @@ PMC ID & Journal name & Publication date & Number of citations \\\hline
 \end{tabular}
 \end{table}
 
-The first three can be extracted from the files, the last one needs to captured from the website. This table will also serve as a master table for connecting citations to PMC ID.
+The first three can be extracted from the files, the last one needs to captured from the website. This table will also serve as a master table for connecting citations to PMC ID. Trying to predict the citation count from meta data is not without merit, it has been shown to be highly correlated with the citation count.\footnote{\url{https://github.com/closingsquarebracket/merck_medical_papers}}
+
+Much of the required information is available straight from the index file.\footnote{\url{https://www.ncbi.nlm.nih.gov/pmc/tools/ftp/\#index_files}} From there only the citations need to be retrieved.
+
+A line in the index file has the structure:
+\begin{verbatim}
+oa_package/08/e0/PMC13900.tar.gz\tBreast Cancer Res. 2001 Nov 2; 3(1):55-60\tPMC13900\tPMID:11250746\tNO-CC CODE\n
+\end{verbatim}
+Splitting by tabs, the name of the publication and the date can be retrieved by the following regex:
+\begin{verbatim}
+([\w\s()]+.?)\s(\d{4}\s\w{3}\s\d+);
+\end{verbatim}
+and for those papers where the day is missing or a month-range is given:
+\begin{verbatim}
+([\w\s()]+.?)\s(\d{4}\s\w{3})[-;\s]
+\end{verbatim}
+
+
+
 
 
 
