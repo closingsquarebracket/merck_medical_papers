@@ -7,7 +7,7 @@ import json
 
 citation_block_size = 250
 base_directory = "/Volumes/υπόλοιπο/medical paper analysis/comm_use.A-B.xml"
-base_request_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?tool=merck_medical_challenge&email=maximilian.mansky@gmx.de&"
+base_request_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?tool=merck_medical_challenge&"
 def get_pmc_id(file):
     """extract the ID from the file name"""
     pmc_id = file.split(".")[0]
@@ -184,21 +184,28 @@ if __name__ == '__main__':
 
     n_citations = []
     full_web_of_citations = {}
-    for block in range(0, len(pmcs), citation_block_size):
+    with open('full_web.json', 'r') as f_web:
+        old_web = json.load(f_web)  # read old information from file
+    full_web_of_citations = {**old_web, **full_web_of_citations} # join dictionaries
+    del old_web
+    print(f"number of papers: {len(pmcs)}, currently processed: {len(full_web_of_citations)}")
+
+    for block in range(2399000, len(pmcs), citation_block_size): # in case of crash, restart from last printed 'start' value
         start = block
+        print(start)
         end = min(len(pmcs), block + citation_block_size) # avoid overshooting and having to rerun.
         source_papers = pmcs[start:end]
         citations = get_multiple_citations(pmcs[start:end])
         for counter in range(end-start):
             n_citations.append(len(citations[counter]))
             full_web_of_citations[source_papers[counter]] = citations[counter]
-    with open('oa_with_citations', 'w+') as f_table:
-        f_table.write('PMC_ID; Publication; Publication_date; n_citations\n')
-        for counter in range(len(pmcs)):
-            f_table.write(f"{pmcs[counter]}; {publication_names[counter]}; {publication_dates[counter]}; {n_citations[counter]}\n")
 
-    with open('full_web.json', 'w+') as f_web:
-        json.dump(full_web_of_citations, f_web)
+        with open('oa_with_citations.txt', 'a') as f_table:
+            for counter in range(start,end):
+                f_table.write(f"{pmcs[counter]}; {publication_names[counter]}; {publication_dates[counter]}; {n_citations[counter - start]}\n")
+
+        with open('full_web.json', 'w') as f_web:
+            json.dump(full_web_of_citations, f_web)
 
 
 
