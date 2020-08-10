@@ -6,8 +6,11 @@ import re
 import json
 
 citation_block_size = 250
-base_directory = "/Volumes/υπόλοιπο/medical paper analysis/comm_use.A-B.xml"
-base_request_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?tool=merck_medical_challenge&"
+with open('locations.json', 'r') as f_loc:
+    # create your local locations file for data locations and url requests.
+    locations = json.load(f_loc)
+base_directory = locations['base_directory']
+base_request_url = locations['base_request_url']
 def get_pmc_id(file):
     """extract the ID from the file name"""
     pmc_id = file.split(".")[0]
