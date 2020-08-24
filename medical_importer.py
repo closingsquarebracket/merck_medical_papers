@@ -1,8 +1,9 @@
-import requests
-from lxml import etree
 import datetime
-import re
 import json
+import logging
+import re
+
+import requests
 
 citation_block_size = 250
 with open('locations.json', 'r') as f_loc:
@@ -10,11 +11,6 @@ with open('locations.json', 'r') as f_loc:
     locations = json.load(f_loc)
 base_directory = locations['base_directory']
 base_request_url = locations['base_request_url']
-
-parse_locations = {"journal_name": "front/journal-meta/journal-id[@journal-id-type='nlm-ta']",
-    "article_category": "front/article-meta/article-categories/subj-group/subject",
-    "article_title": "front/article-meta/title-group/article-title",
-    "abstract": "front/article-meta/abstract/p"}
 
 
 def get_pmc_id(file):
@@ -46,7 +42,7 @@ def get_publication_date(parsed_document):
             except AttributeError:
                 # parsing error or other publication method
                 pub_date = None
-                pub_year, pub_month, pub_day = 1, 1, 1  # silce complaints from IDE
+                pub_year, pub_month, pub_day = 1, 1, 1  # silence complaints from IDE
     if pub_date is not None:
         # parse date into standard format
         pub_date = datetime.date(int(pub_year), int(pub_month), int(pub_day))
@@ -60,6 +56,7 @@ def get_citation_count(pmc_id):
     except KeyError:
         # if there are no citations, the 'linksetdbs' key is not set, leading to a key error instead of an empty list.
         number_of_citations = 0
+        logging.warning(f"No citations found for id: {pmc_id}")
     return number_of_citations
 
 
@@ -79,38 +76,6 @@ def get_multiple_citations(list_of_ids):
         list_of_citations.append(
             citations)  # list of lists: [[<citations>], [<citations>]] in the same order as input list
     return list_of_citations
-
-
-def get_article_info(parsed_document: etree, xml_location: str, alt_text: str = 'n/a'):
-    try:
-        information = parsed_document.find(xml_location).text
-    except AttributeError:
-        information = alt_text
-    if information is None:
-        information = alt_text
-    return information
-
-
-def get_authors(parsed_document, min_number_authors):
-    list_of_authors = []
-    try:
-        authors = parsed_document.findall('front/article-meta/contrib-group/')
-        try:
-            for author in authors:
-                surname = author.find('name/surname').text
-                given_name = author.find('name/given-names').text
-                list_of_authors += [surname, given_name]
-        except AttributeError:
-            # Error in Parsing
-            list_of_authors += ['ParsingError'] * 2
-    except AttributeError:
-        # list of authors cannot be found
-        list_of_authors += ['MissingAuthor'] * 2
-
-    if len(list_of_authors) <= 2 * min_number_authors:
-        # padding if there is only one or two authors:
-        list_of_authors += [' - '] * 2 * min_number_authors
-    return list_of_authors[:2 * min_number_authors]
 
 
 def get_keywords(parsed_document):
@@ -167,24 +132,23 @@ if __name__ == '__main__':
     # try:
     #     f_table = open("comm_use.A-B_base_information.csv", 'w+')
     #     f_table.write("PMC_ID; Journal_name; Publication_date; Citation_count\n")
-    #     for subdir, dir, files in os.walk(base_directory):
-    #         for file in files:
-    #             if file != '.DS_Store':
-    #                 print(file)
-    #                 file_address = os.path.join(subdir, file)
-    #                 # capture PMC ID. Just grab it from file name.
-    #                 pmc_id = get_pmc_id(file)
-    #                 pub_date = 0
-    #                 # start parsing the xml tree
-    #                 tree = etree.parse(file_address)
-    #                 root = tree.getroot()
-    #                 # retrieve standard journal name
-    #                 journal_name = get_article_info(root, parse_locations['journal_name'])
-    #                 # find publication date
-    #                 pub_date = get_publication_date(root)
-    #                 # get citation count
-    #                 n_citations = get_citation_count(pmc_id)
-    #                 f_table.write(f"{pmc_id}; {journal_name}; {pub_date}; {n_citations}\n")
+    #     import util
+    #     for file_address in util.file_processor(base_directory):
+    #         print(file)
+    #         file_address = os.path.join(subdir, file)
+    #         # capture PMC ID. Just grab it from file name.
+    #         pmc_id = get_pmc_id(file)
+    #         pub_date = 0
+    #         # start parsing the xml tree
+    #         tree = etree.parse(file_address)
+    #         root = tree.getroot()
+    #         # retrieve standard journal name
+    #         journal_name = get_article_info(root, parse_locations['journal_name'])
+    #         # find publication date
+    #         pub_date = get_publication_date(root)
+    #         # get citation count
+    #         n_citations = get_citation_count(pmc_id)
+    #         f_table.write(f"{pmc_id}; {journal_name}; {pub_date}; {n_citations}\n")
     # finally:
     #     f_table.close()
 
